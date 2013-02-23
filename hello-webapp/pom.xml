@@ -12,6 +12,7 @@
   <!--version>1.0-SNAPSHOT</version-->
   <name>hello-webapp</name>
   <url>http://maven.apache.org</url>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -29,6 +30,13 @@
     </dependency>
   </dependencies>
   <build>
+    <plugins>
+      <plugin>
+        <groupId>org.mortbay.jetty</groupId>
+        <artifactId>maven-jetty-plugin</artifactId>
+      </plugin>
+    </plugins>
+
     <finalName>hello-webapp</finalName>
   </build>
 </project>
