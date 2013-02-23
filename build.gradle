@@ -1,0 +1,35 @@
+description = """hello-app"""
+
+allprojects {
+  group = 'edu.ka.hello.increment'
+  version = '1.0-SNAPSHOT'
+
+  apply plugin: 'java'
+  apply plugin: 'maven'
+
+  sourceCompatibility = 1.6
+  targetCompatibility = 1.6	
+}
+
+project(":hello-webapp") {
+	description = 'Hello world web application'
+	
+	apply plugin: 'war'
+	apply plugin: 'jetty'
+	
+	dependencies {		
+		runtime project(':hello-impl')
+	}
+}
+
+project(":hello-impl") {
+	description = 'Hello world implementation'
+	
+	dependencies {		
+		compile project(':hello-api')
+	}
+}
+
+repositories {        
+     mavenRepo url: "http://repo.maven.apache.org/maven2"
+}
