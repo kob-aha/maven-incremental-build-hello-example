@@ -1,0 +1,38 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>edu.ka.hello.increment</groupId>
+  <artifactId>hello-app</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>hello-app</name>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>edu.ka.hello.increment</groupId>
+        <artifactId>hello-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>edu.ka.hello.increment</groupId>
+        <artifactId>hello-impl</artifactId>
+        <version>${project.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>edu.ka.hello.increment</groupId>
+        <artifactId>hello-webapp</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <modules>
+    <module>hello-api</module>
+    <module>hello-impl</module>
+    <module>hello-webapp</module>
+  </modules>
+</project>
