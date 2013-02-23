@@ -1,6 +1,9 @@
 description = """hello-app"""
 
-allprojects {
+// Variable that will contain the list of changed modules
+ext.changedModulesNames = ""
+
+allprojects { innerProject ->
   group = 'edu.ka.hello.increment'
   version = '1.0-SNAPSHOT'
 
@@ -9,6 +12,25 @@ allprojects {
 
   sourceCompatibility = 1.6
   targetCompatibility = 1.6	
+
+  task checkModuleChanged {
+
+    description 'Checks whether a certain module had been changed in order to be build using Maven' 
+
+    // Configures Maven input and output directories
+    inputs.files fileTree("${innerProject.projectDir}/src/main")
+    outputs.files fileTree("${innerProject.projectDir}/target")
+
+    doLast {
+
+      if (rootProject.ext.changedModulesNames) {
+        rootProject.ext.changedModulesNames += ",:${project.name}"  
+      } else {
+        rootProject.ext.changedModulesNames += ":${project.name}"
+      }  
+    }
+
+  }
 }
 
 project(":hello-webapp") {
@@ -28,6 +50,29 @@ project(":hello-impl") {
 	dependencies {		
 		compile project(':hello-api')
 	}
+}
+
+task buildChangedModules(type: Exec, description: 'Build changed modules using Maven') {
+
+  // Make sure that this task depends on checkModuleChanged in all child projects
+  for (Project p : project.allprojects) {
+    if (!p.name.equalsIgnoreCase("${project.name}")) {
+      dependsOn << ":${p.name}:checkModuleChanged"
+    }
+  }
+
+  onlyIf {
+    project.ext.changedModulesNames
+  }
+
+  doFirst {
+
+    commandLine 'mvn', 'clean', 'install', '-pl', "${project.ext.changedModulesNames}"
+
+    println "Changed modules are: ${project.ext.changedModulesNames}"      
+    println "Executed command: ${commandLine}"
+  }
+
 }
 
 repositories {        
