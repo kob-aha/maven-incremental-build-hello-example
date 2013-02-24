@@ -3,6 +3,9 @@ build
 .gradle
 *.class
 
+gradlew*
+gradle
+
 # Package Files #
 *.jar
 *.war

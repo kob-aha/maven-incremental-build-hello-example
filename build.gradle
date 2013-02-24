@@ -77,6 +77,10 @@ task buildChangedModules(type: Exec, description: 'Build changed modules using M
 
 }
 
+task createGradleWrapper(type: Wrapper) {
+  gradleVersion = '1.4'
+}
+
 repositories {        
      mavenRepo url: "http://repo.maven.apache.org/maven2"
 }
