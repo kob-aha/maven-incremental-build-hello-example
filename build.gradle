@@ -18,10 +18,12 @@ allprojects { innerProject ->
     description 'Checks whether a certain module had been changed in order to be build using Maven' 
 
     // Configures Maven input and output directories
-    inputs.files fileTree("${innerProject.projectDir}/src/main")
+    inputs.files fileTree("${innerProject.projectDir}/src/main"), file("${innerProject.projectDir}/pom.xml")
     outputs.files fileTree("${innerProject.projectDir}/target")
 
     doLast {
+
+      logger.info "Module ${project.name} had been changed. Adding to build list" 
 
       if (rootProject.ext.changedModulesNames) {
         rootProject.ext.changedModulesNames += ",:${project.name}"  
@@ -52,14 +54,18 @@ project(":hello-impl") {
 	}
 }
 
-task buildChangedModules(type: Exec, description: 'Build changed modules using Maven') {
+task buildChangedModules(type: Exec, description: 'Build changed modules using Maven', dependsOn: checkModuleChanged) {
 
-  // Make sure that this task depends on checkModuleChanged in all child projects
-  for (Project p : project.allprojects) {
-    if (!p.name.equalsIgnoreCase("${project.name}")) {
-      dependsOn << ":${p.name}:checkModuleChanged"
-    }
+  // Make sure that this task depends on checkModuleChanged in all projects
+  subprojects.each { subproject -> 
+    dependsOn << ":${subproject.name}:checkModuleChanged"
   }
+
+  //dependsOn {
+  //  allTasks(recursive:true).each { k,v ->
+  //    v.findAll {task -> task.name.equals('checkModuleChanged')}
+  //  }
+  //}
 
   onlyIf {
     project.ext.changedModulesNames
@@ -69,8 +75,8 @@ task buildChangedModules(type: Exec, description: 'Build changed modules using M
 
     commandLine 'mvn', 'clean', 'install', '-pl', "${project.ext.changedModulesNames}"
 
-    println "Changed modules are: ${project.ext.changedModulesNames}"      
-    println "Executed command: ${commandLine}"
+    logger.info "Changed modules are: ${project.ext.changedModulesNames}"      
+    logger.info "Executed command: ${commandLine}"
   }
 
 }

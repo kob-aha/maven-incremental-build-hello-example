@@ -10,7 +10,6 @@
 
   <groupId>edu.ka.hello.increment</groupId>
   <artifactId>hello-impl</artifactId>
-  <!--version>1.0-SNAPSHOT</version-->
   <packaging>jar</packaging>
 
   <name>hello-impl</name>
