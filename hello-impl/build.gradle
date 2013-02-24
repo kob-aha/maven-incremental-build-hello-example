@@ -1,0 +1,1 @@
+checkModuleChanged.inputs.dir file("${project.projectDir}/../hello-api/src/main")

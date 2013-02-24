@@ -13,13 +13,15 @@ allprojects { innerProject ->
   sourceCompatibility = 1.6
   targetCompatibility = 1.6	
 
+  def ConfigurableFileCollection mavenInputFiles = files("${innerProject.projectDir}/src/main", "${innerProject.projectDir}/pom.xml")
+
   task checkModuleChanged {
 
     description 'Checks whether a certain module had been changed in order to be build using Maven' 
 
     // Configures Maven input and output directories
-    inputs.files fileTree("${innerProject.projectDir}/src/main"), file("${innerProject.projectDir}/pom.xml")
-    outputs.files fileTree("${innerProject.projectDir}/target")
+    inputs.files files(file("${innerProject.projectDir}/src/main"), "${innerProject.projectDir}/pom.xml")
+    outputs.dir file("${innerProject.projectDir}/target")
 
     doLast {
 
@@ -60,12 +62,6 @@ task buildChangedModules(type: Exec, description: 'Build changed modules using M
   subprojects.each { subproject -> 
     dependsOn << ":${subproject.name}:checkModuleChanged"
   }
-
-  //dependsOn {
-  //  allTasks(recursive:true).each { k,v ->
-  //    v.findAll {task -> task.name.equals('checkModuleChanged')}
-  //  }
-  //}
 
   onlyIf {
     project.ext.changedModulesNames
