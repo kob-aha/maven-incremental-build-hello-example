@@ -1,86 +1,95 @@
-description = """hello-app"""
+description = 'hello-app'
 
 // Variable that will contain the list of changed modules
-ext.changedModulesNames = ""
+ext.changedModulesNames = ''
 
 allprojects { innerProject ->
-  group = 'edu.ka.hello.increment'
-  version = '1.0-SNAPSHOT'
+    group = 'edu.ka.hello.increment'
+    version = '1.0-SNAPSHOT'
 
-  apply plugin: 'java'
-  apply plugin: 'maven'
+    apply plugin: 'java'
 
-  sourceCompatibility = 1.6
-  targetCompatibility = 1.6	
+    sourceCompatibility = 1.6
+    targetCompatibility = 1.6
 
-  def ConfigurableFileCollection mavenInputFiles = files("${innerProject.projectDir}/src/main", "${innerProject.projectDir}/pom.xml")
+    afterEvaluate {
+        task checkModuleChanged {
 
-  task checkModuleChanged {
+            description 'Checks whether a certain module had been changed in order to be build using Maven'
 
-    description 'Checks whether a certain module had been changed in order to be build using Maven' 
+            // Configures project and dependent source directories as inputs
+            def projCompileDeps = innerProject.configurations.compile.getAllDependencies().withType(ProjectDependency)
+            def projRuntimeDeps = innerProject.configurations.runtime.getAllDependencies().withType(ProjectDependency)
+            def dependedUponProjects = (projCompileDeps + projRuntimeDeps)*.dependencyProject
+            def dependentSrcDirs = dependedUponProjects*.sourceSets*.main*.allSource*.srcDirs
+            def ownSrcDirs = innerProject.sourceSets.main.allSource.srcDirs
 
-    // Configures Maven input and output directories
-    inputs.files files(file("${innerProject.projectDir}/src/main"), "${innerProject.projectDir}/pom.xml")
-    outputs.dir file("${innerProject.projectDir}/target")
+//            println "project ${innerProject} ownSrcDirs ${ownSrcDirs}"
+//            println "project ${innerProject} depSrcDirs ${dependentSrcDirs}"
 
-    doLast {
+            inputs.files dependentSrcDirs
+            inputs.files ownSrcDirs
+            outputs.dir file("${innerProject.projectDir}/target")
 
-      logger.info "Module ${project.name} had been changed. Adding to build list" 
+            doLast {
+                println "Module ${innerProject.name} had been changed. Adding to build list"
 
-      if (rootProject.ext.changedModulesNames) {
-        rootProject.ext.changedModulesNames += ",:${project.name}"  
-      } else {
-        rootProject.ext.changedModulesNames += ":${project.name}"
-      }  
+                if (rootProject.ext.changedModulesNames) {
+                    rootProject.ext.changedModulesNames += ",:${project.name}"
+                } else {
+                    rootProject.ext.changedModulesNames += ":${project.name}"
+                }
+            }
+
+        }
     }
-
-  }
 }
 
+
 project(":hello-webapp") {
-	description = 'Hello world web application'
-	
-	apply plugin: 'war'
-	apply plugin: 'jetty'
-	
-	dependencies {		
-		runtime project(':hello-impl')
-	}
+    description = 'Hello world web application'
+
+    apply plugin: 'war'
+    apply plugin: 'jetty'
+
+    dependencies {
+        runtime project(':hello-impl')
+    }
 }
 
 project(":hello-impl") {
-	description = 'Hello world implementation'
-	
-	dependencies {		
-		compile project(':hello-api')
-	}
+    description = 'Hello world implementation'
+
+    dependencies {
+        compile project(':hello-api')
+    }
 }
 
-task buildChangedModules(type: Exec, description: 'Build changed modules using Maven', dependsOn: checkModuleChanged) {
+task buildChangedModules(type: Exec, description: 'Build changed modules using Maven') {
 
-  // Make sure that this task depends on checkModuleChanged in all projects
-  subprojects.each { subproject -> 
-    dependsOn << ":${subproject.name}:checkModuleChanged"
-  }
+    // Make sure that this task depends on checkModuleChanged in all projects
+    subprojects.each { subproject ->
+        dependsOn << ":${subproject.name}:checkModuleChanged"
+    }
 
-  onlyIf {
-    project.ext.changedModulesNames
-  }
+    onlyIf {
+        project.ext.changedModulesNames
+    }
 
-  doFirst {
+    doFirst {
 
-    commandLine 'mvn', 'clean', 'install', '-pl', "${project.ext.changedModulesNames}"
+        commandLine 'mvn', 'clean', 'install', '-pl', "${project.ext.changedModulesNames}"
 
-    logger.info "Changed modules are: ${project.ext.changedModulesNames}"      
-    logger.info "Executed command: ${commandLine}"
-  }
+        logger.info "Changed modules are: ${project.ext.changedModulesNames}"
+        logger.info "Executed command: ${commandLine}"
+    }
 
 }
 
 task createGradleWrapper(type: Wrapper) {
-  gradleVersion = '1.4'
+    gradleVersion = '1.4'
 }
 
-repositories {        
-     mavenRepo url: "http://repo.maven.apache.org/maven2"
+repositories {
+    mavenCentral()
 }
