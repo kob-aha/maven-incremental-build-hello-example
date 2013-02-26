@@ -1,1 +1,2 @@
-checkModuleChanged.inputs.dir file("${project.projectDir}/../hello-api/src/main")
+//checkModuleChanged.inputs.dir file("${project.projectDir}/../hello-api/src/main")
+// update the line above when you want to add specific dependencies to a project
