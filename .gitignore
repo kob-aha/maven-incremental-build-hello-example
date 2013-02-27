@@ -4,6 +4,7 @@ build
 .gradle
 *.class
 .idea
+*.sublime*
 
 gradlew*
 gradle
