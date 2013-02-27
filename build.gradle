@@ -3,6 +3,10 @@ description = 'hello-app'
 // Variable that will contain the list of changed modules
 ext.changedModulesNames = ''
 
+ext.changedModules = [] as Set
+
+ext.outputFileName = 'build-success.txt'
+
 allprojects { innerProject ->
     group = 'edu.ka.hello.increment'
     version = '1.0-SNAPSHOT'
@@ -27,24 +31,27 @@ allprojects { innerProject ->
 //            println "project ${innerProject} ownSrcDirs ${ownSrcDirs}"
 //            println "project ${innerProject} depSrcDirs ${dependentSrcDirs}"
 
-            inputs.files dependentSrcDirs
-            inputs.files ownSrcDirs
-            outputs.dir file("${innerProject.projectDir}/target")
+            inputs.files files(dependentSrcDirs, ownSrcDirs, "${innerProject.projectDir}/pom.xml")
+
+            outputs.upToDateWhen {                  
+                new File("${innerProject.projectDir}/target/${rootProject.ext.outputFileName}").exists()
+            }
 
             doLast {
                 println "Module ${innerProject.name} had been changed. Adding to build list"
 
+                rootProject.ext.changedModules << innerProject
+
                 if (rootProject.ext.changedModulesNames) {
-                    rootProject.ext.changedModulesNames += ",:${project.name}"
+                    rootProject.ext.changedModulesNames += ",:${innerProject.name}"                    
                 } else {
-                    rootProject.ext.changedModulesNames += ":${project.name}"
+                    rootProject.ext.changedModulesNames += ":${innerProject.name}"
                 }
             }
 
         }
     }
 }
-
 
 project(":hello-webapp") {
     description = 'Hello world web application'
@@ -65,7 +72,26 @@ project(":hello-impl") {
     }
 }
 
-task buildChangedModules(type: Exec, description: 'Build changed modules using Maven') {
+task cleanChangedModules(description: 'Deletes build success dummy file from changed modules') {
+    // Make sure that this task depends on checkModuleChanged in all projects
+    subprojects.each { subproject ->
+        dependsOn << ":${subproject.name}:checkModuleChanged"
+    }
+
+    onlyIf {
+        project.ext.changedModulesNames
+    }
+
+    doFirst {
+        project.ext.changedModules.each { changedModule -> 
+            new File("${changedModule.projectDir}/target/${rootProject.ext.outputFileName}").delete()
+        }                
+    }    
+}
+
+// This task dependsOn cleanChangedModules in order to make sure skipped modules are rebuild in case
+// Maven execution fails in the middle
+task buildChangedModules(type: Exec, description: 'Build changed modules using Maven', dependsOn: cleanChangedModules) {
 
     // Make sure that this task depends on checkModuleChanged in all projects
     subprojects.each { subproject ->
