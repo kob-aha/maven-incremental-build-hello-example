@@ -72,7 +72,7 @@ project(":hello-impl") {
     }
 }
 
-task cleanChangedModules(description: 'Deletes build success dummy file from changed modules') {
+task cleanChangedModules(description: 'Deletes build success dummy file from changed modules', dependsOn: ":checkModuleChanged") {
     // Make sure that this task depends on checkModuleChanged in all projects
     subprojects.each { subproject ->
         dependsOn << ":${subproject.name}:checkModuleChanged"
@@ -92,11 +92,6 @@ task cleanChangedModules(description: 'Deletes build success dummy file from cha
 // This task dependsOn cleanChangedModules in order to make sure skipped modules are rebuild in case
 // Maven execution fails in the middle
 task buildChangedModules(type: Exec, description: 'Build changed modules using Maven', dependsOn: cleanChangedModules) {
-
-    // Make sure that this task depends on checkModuleChanged in all projects
-    subprojects.each { subproject ->
-        dependsOn << ":${subproject.name}:checkModuleChanged"
-    }
 
     onlyIf {
         project.ext.changedModulesNames
