@@ -27,11 +27,9 @@ allprojects { innerProject ->
             def dependedUponProjects = (projCompileDeps + projRuntimeDeps)*.dependencyProject
             def dependentSrcDirs = dependedUponProjects*.sourceSets*.main*.allSource*.srcDirs
             def ownSrcDirs = innerProject.sourceSets.main.allSource.srcDirs
+            def ownTestDirs = innerProject.sourceSets.test.allSource.srcDirs
 
-//            println "project ${innerProject} ownSrcDirs ${ownSrcDirs}"
-//            println "project ${innerProject} depSrcDirs ${dependentSrcDirs}"
-
-            inputs.files files(dependentSrcDirs, ownSrcDirs, "${innerProject.projectDir}/pom.xml")
+            inputs.files files(dependentSrcDirs, ownSrcDirs, ownTestDirs, "${innerProject.projectDir}/pom.xml")
 
             outputs.upToDateWhen {                  
                 new File("${innerProject.projectDir}/target/${rootProject.ext.outputFileName}").exists()
